@@ -23,6 +23,7 @@
     width: 20%;
     background-color: rgb(239, 239, 239);
     padding: 20px;
+    flex-direction: column;
 }
 
 .main-content {

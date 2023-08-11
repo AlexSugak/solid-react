@@ -1,7 +1,7 @@
 import React from "react";
 import "./VideosList.css";
 
-type VideoDetails = {
+export type VideoDetails = {
   previewUrl: string;
   title: string;
   author: string;
@@ -91,7 +91,7 @@ type VideoPreviewProps<T extends VideoDetails> = {
   renderDescription?: (video: T) => React.ReactElement;
 };
 
-const VideoPreviewTemplate = <T extends VideoDetails>({
+export const VideoPreviewTemplate = <T extends VideoDetails>({
   videoDetails,
   renderImagePreview = (video) => (
     <VideoPreviewImage previewUrl={video.previewUrl} />
