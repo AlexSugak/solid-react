@@ -21,25 +21,51 @@ const loadVideoDetails = (id: string): Promise<VideoDetails> => {
   );
 };
 
-const VideoPreview = ({ videoId }: { videoId: string }) => {
+const useVideoDetails = (videoId: string) => {
   const [videoDetails, setVideoDetails] = React.useState<VideoDetails>();
   React.useEffect(() => {
     loadVideoDetails(videoId).then((vd) => setVideoDetails(vd));
   }, [videoId]);
+
+  return videoDetails;
+};
+
+const VideoPreviewImage = ({
+  videoDetails,
+}: {
+  videoDetails: VideoDetails;
+}) => {
+  return (
+    <img
+      className="videoImg"
+      alt="video preview"
+      src={videoDetails.previewUrl}
+    />
+  );
+};
+
+const VideoDescription = ({ videoDetails }: { videoDetails: VideoDetails }) => {
+  return (
+    <>
+      <div style={{ fontWeight: "bold" }}>{videoDetails.title}</div>
+      <div style={{ color: "#808080" }}>{videoDetails.author}</div>
+    </>
+  );
+};
+
+const Loader = ({}) => <span>{"loading..."}</span>;
+
+const VideoPreview = ({ videoId }: { videoId: string }) => {
+  const videoDetails = useVideoDetails(videoId);
   return videoDetails ? (
     <div style={{ display: "flex" }}>
-      <img
-        className="videoImg"
-        alt="video preview"
-        src={videoDetails.previewUrl}
-      />
+      <VideoPreviewImage videoDetails={videoDetails} />
       <div style={{ paddingLeft: "10px" }}>
-        <div style={{ fontWeight: "bold" }}>{videoDetails.title}</div>
-        <div style={{ color: "#808080" }}>{videoDetails.author}</div>
+        <VideoDescription videoDetails={videoDetails} />
       </div>
     </div>
   ) : (
-    <span>{"loading..."}</span>
+    <Loader />
   );
 };
 
