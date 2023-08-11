@@ -1,0 +1,16 @@
+.videosWrapper {
+  padding: 16px;
+  flex-direction: column;
+}
+
+.videoImg {
+  width: 200px;
+  border-radius: 10px; 
+  border: 1px solid;
+}
+
+.liveBadge {
+  color: white;
+  background-color: red;
+  padding: 3px;
+}
