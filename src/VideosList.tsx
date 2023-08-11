@@ -7,22 +7,35 @@ type VideoDetails = {
   author: string;
 };
 
-const loadVideoDetails = (id: string): Promise<VideoDetails> => {
+type StreamDetails = VideoDetails & { watching: number };
+
+const loadVideoDetails = (
+  id: string
+): Promise<VideoDetails | StreamDetails> => {
   return new Promise((resolve) =>
     setTimeout(
       () =>
-        resolve({
-          previewUrl: "https://i.ytimg.com/vi/BlNwQdqdRig/hqdefault.jpg",
-          title: "функціональний TypeScript: функція curry",
-          author: "@AleksandrSugak",
-        }),
+        id.toLowerCase().includes("stream")
+          ? resolve({
+              previewUrl: "https://i.ytimg.com/vi/gYszgvLdxpI/hqdefault.jpg",
+              title: "SOLID на практике - нужен или нет?",
+              author: "@AleksandrSugak",
+              watching: 12000,
+            })
+          : resolve({
+              previewUrl: "https://i.ytimg.com/vi/BlNwQdqdRig/hqdefault.jpg",
+              title: "функціональний TypeScript: функція curry",
+              author: "@AleksandrSugak",
+            }),
       500
     )
   );
 };
 
 const useVideoDetails = (videoId: string) => {
-  const [videoDetails, setVideoDetails] = React.useState<VideoDetails>();
+  const [videoDetails, setVideoDetails] = React.useState<
+    VideoDetails | StreamDetails
+  >();
   React.useEffect(() => {
     loadVideoDetails(videoId).then((vd) => setVideoDetails(vd));
   }, [videoId]);
@@ -53,6 +66,20 @@ const VideoDescription = ({ videoDetails }: { videoDetails: VideoDetails }) => {
   );
 };
 
+const StreamDescription = ({
+  videoDetails,
+}: {
+  videoDetails: StreamDetails;
+}) => {
+  return (
+    <>
+      <VideoDescription videoDetails={videoDetails} />
+      <div style={{ color: "#808080" }}>{videoDetails.watching} watching</div>
+      <span className="liveBadge">live</span>
+    </>
+  );
+};
+
 const Loader = ({}) => <span>{"loading..."}</span>;
 
 const VideoPreview = ({ videoId }: { videoId: string }) => {
@@ -61,7 +88,11 @@ const VideoPreview = ({ videoId }: { videoId: string }) => {
     <div style={{ display: "flex" }}>
       <VideoPreviewImage videoDetails={videoDetails} />
       <div style={{ paddingLeft: "10px" }}>
-        <VideoDescription videoDetails={videoDetails} />
+        {"watching" in videoDetails ? (
+          <StreamDescription videoDetails={videoDetails} />
+        ) : (
+          <VideoDescription videoDetails={videoDetails} />
+        )}
       </div>
     </div>
   ) : (
@@ -73,6 +104,8 @@ const VideosList = ({}) => {
   return (
     <div className="listWrapper">
       <VideoPreview videoId={"testVideo"} />
+      <br />
+      <VideoPreview videoId={"testStream"} />
     </div>
   );
 };
