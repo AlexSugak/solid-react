@@ -9,35 +9,48 @@ type VideoDetails = {
 
 type StreamDetails = VideoDetails & { watching: number };
 
-const loadVideoDetails = (
-  id: string
-): Promise<VideoDetails | StreamDetails> => {
+const loadVideoDetails = (id: string): Promise<VideoDetails> => {
   return new Promise((resolve) =>
     setTimeout(
       () =>
-        id.toLowerCase().includes("stream")
-          ? resolve({
-              previewUrl: "https://i.ytimg.com/vi/gYszgvLdxpI/hqdefault.jpg",
-              title: "SOLID на практике - нужен или нет?",
-              author: "@AleksandrSugak",
-              watching: 12000,
-            })
-          : resolve({
-              previewUrl: "https://i.ytimg.com/vi/BlNwQdqdRig/hqdefault.jpg",
-              title: "функціональний TypeScript: функція curry",
-              author: "@AleksandrSugak",
-            }),
+        resolve({
+          previewUrl: "https://i.ytimg.com/vi/BlNwQdqdRig/hqdefault.jpg",
+          title: "функціональний TypeScript: функція curry",
+          author: "@AleksandrSugak",
+        }),
+      500
+    )
+  );
+};
+
+const loadStreamDetails = (id: string): Promise<StreamDetails> => {
+  return new Promise((resolve) =>
+    setTimeout(
+      () =>
+        resolve({
+          previewUrl: "https://i.ytimg.com/vi/gYszgvLdxpI/hqdefault.jpg",
+          title: "SOLID на практике - нужен или нет?",
+          author: "@AleksandrSugak",
+          watching: 12000,
+        }),
       500
     )
   );
 };
 
 const useVideoDetails = (videoId: string) => {
-  const [videoDetails, setVideoDetails] = React.useState<
-    VideoDetails | StreamDetails
-  >();
+  const [videoDetails, setVideoDetails] = React.useState<VideoDetails>();
   React.useEffect(() => {
     loadVideoDetails(videoId).then((vd) => setVideoDetails(vd));
+  }, [videoId]);
+
+  return videoDetails;
+};
+
+const useStreamDetails = (videoId: string) => {
+  const [videoDetails, setVideoDetails] = React.useState<StreamDetails>();
+  React.useEffect(() => {
+    loadStreamDetails(videoId).then((vd) => setVideoDetails(vd));
   }, [videoId]);
 
   return videoDetails;
@@ -82,21 +95,35 @@ const StreamDescription = ({
 
 const Loader = ({}) => <span>{"loading..."}</span>;
 
-const VideoPreview = ({ videoId }: { videoId: string }) => {
-  const videoDetails = useVideoDetails(videoId);
+type VideoPreviewProps = {
+  videoId: string;
+  videoDetailsGetter?: typeof useVideoDetails;
+  ImagePreviewComponent?: React.FunctionComponent<{
+    videoDetails: VideoDetails;
+  }>;
+  DescriptionComponent?: React.FunctionComponent<{
+    videoDetails: VideoDetails;
+  }>;
+  LoaderComponet?: React.FunctionComponent<{}>;
+};
+
+const VideoPreview = ({
+  videoId,
+  videoDetailsGetter = useVideoDetails,
+  ImagePreviewComponent = VideoPreviewImage,
+  DescriptionComponent = VideoDescription,
+  LoaderComponet = Loader,
+}: VideoPreviewProps) => {
+  const videoDetails = videoDetailsGetter(videoId);
   return videoDetails ? (
     <div style={{ display: "flex" }}>
-      <VideoPreviewImage videoDetails={videoDetails} />
+      <ImagePreviewComponent videoDetails={videoDetails} />
       <div style={{ paddingLeft: "10px" }}>
-        {"watching" in videoDetails ? (
-          <StreamDescription videoDetails={videoDetails} />
-        ) : (
-          <VideoDescription videoDetails={videoDetails} />
-        )}
+        <DescriptionComponent videoDetails={videoDetails} />
       </div>
     </div>
   ) : (
-    <Loader />
+    <LoaderComponet />
   );
 };
 
@@ -105,7 +132,11 @@ const VideosList = ({}) => {
     <div className="listWrapper">
       <VideoPreview videoId={"testVideo"} />
       <br />
-      <VideoPreview videoId={"testStream"} />
+      <VideoPreview
+        videoId={"testStream"}
+        videoDetailsGetter={useStreamDetails}
+        DescriptionComponent={StreamDescription as any}
+      />
     </div>
   );
 };
