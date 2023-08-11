@@ -86,49 +86,66 @@ const StreamDescription = ({ watching, ...rest }: StreamDescriptionProps) => {
 const Loader = ({}) => <span>{"loading..."}</span>;
 
 type VideoPreviewProps<T extends VideoDetails> = {
-  videoId: string;
+  videoDetails: T;
   renderImagePreview?: (video: T) => React.ReactElement;
   renderDescription?: (video: T) => React.ReactElement;
-  LoaderComponet?: React.FunctionComponent<{}>;
 };
 
-const getVideoPreview =
-  <T extends VideoDetails>(
-    videoDetailsGetter: (videoId: string) => T | undefined
-  ) =>
-  ({
-    videoId,
-    renderImagePreview = (video) => (
-      <VideoPreviewImage previewUrl={video.previewUrl} />
-    ),
-    renderDescription = (video) => <VideoDescription {...video} />,
-    LoaderComponet = Loader,
-  }: VideoPreviewProps<T>) => {
-    const videoDetails = videoDetailsGetter(videoId);
-    return videoDetails ? (
-      <div style={{ display: "flex" }}>
-        {renderImagePreview(videoDetails)}
-        <div style={{ paddingLeft: "10px" }}>
-          {renderDescription(videoDetails)}
-        </div>
+const VideoPreviewTemplate = <T extends VideoDetails>({
+  videoDetails,
+  renderImagePreview = (video) => (
+    <VideoPreviewImage previewUrl={video.previewUrl} />
+  ),
+  renderDescription = (video) => <VideoDescription {...video} />,
+}: VideoPreviewProps<T>) => {
+  return (
+    <div style={{ display: "flex" }}>
+      {renderImagePreview(videoDetails)}
+      <div style={{ paddingLeft: "10px" }}>
+        {renderDescription(videoDetails)}
       </div>
-    ) : (
-      <LoaderComponet />
-    );
-  };
+    </div>
+  );
+};
 
-const VideoPreview = getVideoPreview(useVideoDetails);
-const StreamPreview = getVideoPreview(useStreamDetails);
+const SelfLoadingVideoPreview = <T extends VideoDetails>({
+  videoId,
+  useVideoDetails,
+  renderVideoPreview = (video) => <VideoPreviewTemplate videoDetails={video} />,
+  LoaderComponent = Loader,
+}: {
+  videoId: string;
+  useVideoDetails: (videoId: string) => T;
+  renderVideoPreview?: (video: T) => React.ReactElement;
+  LoaderComponent?: React.FunctionComponent<{}>;
+}) => {
+  const videoDetails = useVideoDetails(videoId);
+  return videoDetails ? renderVideoPreview(videoDetails) : <LoaderComponent />;
+};
+
+const loadData = () =>
+  Promise.all([loadVideoDetails("video"), loadStreamDetails("stream")]);
 
 const VideosList = ({}) => {
+  const [videos, setVideos] = React.useState<VideoDetails[]>([]);
+  React.useEffect(() => {
+    loadData().then(setVideos);
+  }, []);
+
   return (
-    <div className="listWrapper">
-      <VideoPreview videoId={"testVideo"} />
-      <br />
-      <StreamPreview
-        videoId={"testStream"}
-        renderDescription={(video) => <StreamDescription {...video} />}
-      />
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      {videos.map((video) => {
+        if ("watching" in video) {
+          return (
+            <VideoPreviewTemplate
+              videoDetails={video as StreamDetails}
+              renderDescription={(video) => <StreamDescription {...video} />}
+            />
+          );
+        }
+
+        return <VideoPreviewTemplate videoDetails={video} />;
+      })}
     </div>
   );
 };
