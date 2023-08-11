@@ -95,47 +95,47 @@ const StreamDescription = ({
 
 const Loader = ({}) => <span>{"loading..."}</span>;
 
-type VideoPreviewProps = {
+type VideoPreviewProps<T extends VideoDetails> = {
   videoId: string;
-  videoDetailsGetter?: typeof useVideoDetails;
-  ImagePreviewComponent?: React.FunctionComponent<{
-    videoDetails: VideoDetails;
-  }>;
-  DescriptionComponent?: React.FunctionComponent<{
-    videoDetails: VideoDetails;
-  }>;
+  ImagePreviewComponent?: React.FunctionComponent<{ videoDetails: T }>;
+  DescriptionComponent?: React.FunctionComponent<{ videoDetails: T }>;
   LoaderComponet?: React.FunctionComponent<{}>;
 };
 
-const VideoPreview = ({
-  videoId,
-  videoDetailsGetter = useVideoDetails,
-  ImagePreviewComponent = VideoPreviewImage,
-  DescriptionComponent = VideoDescription,
-  LoaderComponet = Loader,
-}: VideoPreviewProps) => {
-  const videoDetails = videoDetailsGetter(videoId);
-  return videoDetails ? (
-    <div style={{ display: "flex" }}>
-      <ImagePreviewComponent videoDetails={videoDetails} />
-      <div style={{ paddingLeft: "10px" }}>
-        <DescriptionComponent videoDetails={videoDetails} />
+const getVideoPreview =
+  <T extends VideoDetails>(
+    videoDetailsGetter: (videoId: string) => T | undefined
+  ) =>
+  ({
+    videoId,
+    ImagePreviewComponent = VideoPreviewImage,
+    DescriptionComponent = VideoDescription,
+    LoaderComponet = Loader,
+  }: VideoPreviewProps<T>) => {
+    const videoDetails = videoDetailsGetter(videoId);
+    return videoDetails ? (
+      <div style={{ display: "flex" }}>
+        <ImagePreviewComponent videoDetails={videoDetails} />
+        <div style={{ paddingLeft: "10px" }}>
+          <DescriptionComponent videoDetails={videoDetails} />
+        </div>
       </div>
-    </div>
-  ) : (
-    <LoaderComponet />
-  );
-};
+    ) : (
+      <LoaderComponet />
+    );
+  };
+
+const VideoPreview = getVideoPreview(useVideoDetails);
+const StreamPreview = getVideoPreview(useStreamDetails);
 
 const VideosList = ({}) => {
   return (
     <div className="listWrapper">
       <VideoPreview videoId={"testVideo"} />
       <br />
-      <VideoPreview
+      <StreamPreview
         videoId={"testStream"}
-        videoDetailsGetter={useStreamDetails}
-        DescriptionComponent={StreamDescription as any}
+        DescriptionComponent={StreamDescription}
       />
     </div>
   );
