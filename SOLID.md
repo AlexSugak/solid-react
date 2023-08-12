@@ -1,5 +1,16 @@
 # SOLID principles overview
 
+Emerged in 80s-90s as a reaction to problems that arise when:
+
+- large teams of programmers (10x)
+- working on a large systems (1kk lines of code)
+- for a long time (years)
+- using OO techniques (classes, inheritance, syb-type polymorphism)
+
+and trying to answer the question:
+
+- how to design the code in order for it to continue be maintainable over time?
+
 Let's look at that "classic" interpretation of SOLID principles from OO perspective
 
 ## Single Responsibility Principle (SRP)
@@ -147,4 +158,36 @@ class VideoRepository {
 }
 
 const videoRepo = new VideoRepository(new VideoAPI());
+```
+
+```typescript
+interface VideoAPIReader {
+  fetch: (id: string) => Promise<unknown>;
+}
+
+interface VideoAPIWriter {
+  put: (videoDetails: unknown) => Promise<undefined>;
+}
+
+interface VideoAPI extends VideoAPIReader, VideoAPIWriter {}
+
+class HttpAPI implements VideoAPI {
+  // fetch(id: string){fetch(...)}
+  // put: (videoDetails: unknown){fetch(...)}
+}
+
+class ReadOnlyCacheAPI implements VideoAPIReader {
+  // fetch(id: string){return cache[id]}
+}
+
+class VideoRepository {
+  constructor(private readonly api: VideoAPIReader) {
+    // api.fetch()
+  }
+
+  // ...
+}
+
+const videoRepo = new VideoRepository(new HttpAPI());
+const videoRepo = new VideoRepository(new ReadOnlyCacheAPI());
 ```
